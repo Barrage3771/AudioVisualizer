@@ -16,14 +16,14 @@ class Particle:
     def is_alive(self):
         return self.lifespan > 0
 
-def emit_particles(center, energy, num_particles):
+def emit_particles(center, energy, num_particles, color=(255, 255, 255)):
     particles = []
     for _ in range(num_particles):
         new_particle = Particle(
             position=center,
             velocity=(random.uniform(-1,1) * energy , random.uniform(-1,1) * energy),
             size=5,
-            color=(255, 255, 255),
+            color=color,
             lifespan=60
         )
         particles.append(new_particle)
