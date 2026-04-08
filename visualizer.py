@@ -1,14 +1,17 @@
 import pygame
 import random
+import colorsys
 import numpy as np
 import tkinter as tk
 from particles import Particle, emit_particles
 from audio import load_audio, get_beats, get_energy, get_frequency_bands
 from tkinter import filedialog
+from menu import show_menu
 
 pygame.init()
 
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+theme = show_menu(screen)
 clock = pygame.time.Clock()
 
 screen_width = screen.get_width()
@@ -45,10 +48,15 @@ beat_index = 0
 start_time = pygame.time.get_ticks()
 
 overlay = pygame.Surface((screen_width, screen_height))
-overlay.set_alpha(15)
+overlay.set_alpha(10)
 overlay.fill((0, 0, 0))
 
 song_length = len(y) / sr
+
+paused = False
+current_time = 0.0
+paused_start = 0
+total_paused_time = 0
 
 running = True
 while running:
@@ -58,33 +66,57 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
+            if event.key == pygame.K_1:
+                theme = "frequency"
+            if event.key == pygame.K_2:
+                theme = "monochrome"
+            if event.key == pygame.K_3:
+                theme = "rainbow"
+            if event.key == pygame.K_SPACE:
+                paused = not paused
+                if paused:
+                    pygame.mixer.music.pause()
+                    paused_start = pygame.time.get_ticks()
+                else:
+                    pygame.mixer.music.unpause()
+                    total_paused_time += pygame.time.get_ticks() - paused_start
+    if not paused:
+        current_time = (pygame.time.get_ticks() - start_time - total_paused_time) / 1000.0
 
-    current_time = (pygame.time.get_ticks() - start_time) / 1000.0
+        freq_index = min(np.searchsorted(energy_times, current_time), len(bass_energy) - 1)
+        current_bass = bass_energy[freq_index]
+        current_mid = mid_energy[freq_index]
+        current_treble = treble_energy[freq_index]
 
-    freq_index = min(np.searchsorted(energy_times, current_time), len(bass_energy) - 1)
-    current_bass = bass_energy[freq_index]
-    current_mid = mid_energy[freq_index]
-    current_treble = treble_energy[freq_index]
+        if theme == "frequency":
+            r = int(max(current_bass * 255, 50))
+            g = int(max(current_mid * 255, 50))
+            b = int(max(current_treble * 255, 50))
+            color = (r, g, b)
+        elif theme == "monochrome":
+            color = (255, 255, 255)
+        elif theme == "rainbow":
+            hue = (pygame.time.get_ticks() / 5000) % 1.0
+            r, g, b = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
+            color = (int(r * 255), int(g * 255), int(b * 255))
 
-    r = int(max(current_bass * 255, 50))
-    g = int(max(current_mid * 255, 50))
-    b = int(max(current_treble * 255, 50))
-    color = (r, g, b)
-
-    if beat_index < len(beat_times):
-        next_beat = beat_times[beat_index]
-        if current_time >= next_beat - 0.1:
-            beat_index += 1
-            energy_index = min(np.searchsorted(energy_times, current_time), len(energy) - 1)
-            current_energy = energy[energy_index]
-            size = int(3 + current_energy * 30)
-            x = random.randint(20, screen_width - 50)
-            y_pos = random.randint(20, screen_height - 50)
-            test_particles.extend(emit_particles((x, y_pos), current_energy * 50, 20, color=color, size=size))
+        if beat_index < len(beat_times):
+            next_beat = beat_times[beat_index]
+            if current_time >= next_beat - 0.1:
+                beat_index += 1
+                energy_index = min(np.searchsorted(energy_times, current_time), len(energy) - 1)
+                current_energy = energy[energy_index]
+                size = int(3 + current_energy * 30)
+                num_particles = int(5 + (current_energy ** 2) * 80)
+                x = random.randint(80, screen_width - 80)
+                y_pos = random.randint(80, screen_height - 80)
+                test_particles.extend(emit_particles((x, y_pos), current_energy * 50, num_particles=num_particles, color=color, size=size))
+        
+        for i in test_particles:
+            i.update()
 
     screen.blit(overlay, (0, 0))
     for i in test_particles:
-        i.update()
         if i.is_alive():
             pygame.draw.circle(screen, i.color, (int(i.position[0]), int(i.position[1])), i.size)
     bar_width = int((current_time / song_length) * screen_width)

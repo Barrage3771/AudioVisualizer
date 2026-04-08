@@ -1,5 +1,7 @@
 import random
 
+GRAVITY = 0.1
+
 class Particle:
     def __init__(self, position, velocity, size,  color, lifespan):
         self.position = position
@@ -10,6 +12,7 @@ class Particle:
         self.lifespan = lifespan
 
     def update(self):
+        self.velocity = (self.velocity[0], self.velocity[1] + GRAVITY)
         self.position = (self.position[0] + self.velocity[0],
                          self.position[1] + self.velocity[1])
         self.lifespan -= 1
