@@ -1,9 +1,10 @@
 import random
 
 class Particle:
-    def __init__(self, position, velocity, size, color, lifespan):
+    def __init__(self, position, velocity, size,  color, lifespan):
         self.position = position
         self.velocity = velocity
+        self.original_size = size
         self.size = size
         self.color = color
         self.lifespan = lifespan
@@ -12,17 +13,18 @@ class Particle:
         self.position = (self.position[0] + self.velocity[0],
                          self.position[1] + self.velocity[1])
         self.lifespan -= 1
+        self.size = max(1, int(self.original_size * (self.lifespan / 60)))
 
     def is_alive(self):
         return self.lifespan > 0
 
-def emit_particles(center, energy, num_particles, color=(255, 255, 255)):
+def emit_particles(center, energy, num_particles, color=(255, 255, 255), size=5):
     particles = []
     for _ in range(num_particles):
         new_particle = Particle(
             position=center,
             velocity=(random.uniform(-1,1) * energy , random.uniform(-1,1) * energy),
-            size=5,
+            size=size,
             color=color,
             lifespan=60
         )

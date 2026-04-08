@@ -77,9 +77,10 @@ while running:
             beat_index += 1
             energy_index = min(np.searchsorted(energy_times, current_time), len(energy) - 1)
             current_energy = energy[energy_index]
+            size = int(3 + current_energy * 30)
             x = random.randint(20, screen_width - 50)
             y_pos = random.randint(20, screen_height - 50)
-            test_particles.extend(emit_particles((x, y_pos), current_energy * 50, 20, color=color))
+            test_particles.extend(emit_particles((x, y_pos), current_energy * 50, 20, color=color, size=size))
 
     screen.blit(overlay, (0, 0))
     for i in test_particles:
