@@ -1,6 +1,7 @@
 import pygame
 import random
 import colorsys
+import os
 import numpy as np
 import tkinter as tk
 from particles import Particle, emit_particles
@@ -30,8 +31,6 @@ if not file_path:
 
 test_particles = []#emit_particles((400, 300), 3.0, 20)
 
-
-
 y, sr = load_audio(file_path)
 tempo, beat_times = get_beats(y, sr)
 energy, energy_times = get_energy(y, sr)
@@ -39,6 +38,11 @@ bass_energy, mid_energy, treble_energy = get_frequency_bands(y, sr)
 bass_energy = bass_energy / np.max(bass_energy)
 mid_energy = mid_energy / np.max(mid_energy)
 treble_energy = treble_energy / np.max(treble_energy)
+
+song_name = os.path.splitext(os.path.basename(file_path))[0]
+font = pygame.font.SysFont("arial", 28)
+name_text = font.render(f"{song_name}", True, (255, 255, 255))
+bpm_text = font.render(f"{tempo:.1f} BPM", True, (255, 255, 255))
 
 pygame.mixer.music.load(file_path)
 pygame.mixer.music.play()
@@ -119,6 +123,8 @@ while running:
     for i in test_particles:
         if i.is_alive():
             pygame.draw.circle(screen, i.color, (int(i.position[0]), int(i.position[1])), i.size)
+    screen.blit(name_text, (20, 20))
+    screen.blit(bpm_text, (20, 55))
     bar_width = int((current_time / song_length) * screen_width)
     pygame.draw.rect(screen, (100, 100, 100), (0, (screen_height - 20), screen_width, 10))
     pygame.draw.rect(screen, (255, 255, 255), (0, (screen_height - 20), bar_width, 10))
